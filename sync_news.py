@@ -58,7 +58,7 @@ def main():
         return
 
     # PUT replaces all existing items in the playlist atomically
-    playlist_url = f"https://api.spotify.com/v1/playlists/{PLAYLIST_ID}/tracks"
+    playlist_url = f"https://api.spotify.com/v1/playlists/{PLAYLIST_ID}/items"
     write_res = requests.put(playlist_url, headers=headers, json={"uris": episode_uris})
     
     if write_res.status_code in [200, 201]:
