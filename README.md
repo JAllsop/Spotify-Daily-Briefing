@@ -2,10 +2,49 @@
 
 Automatically refresh a Spotify playlist with the latest episode from a curated list of news podcasts
 
+## Why This Exists
+
+Google Assistant's old "Play the news" behavior is broken/unreliable for many users. This project is intended as a replacement: it keeps a Spotify playlist updated with the latest news podcast episodes so you can get a fresh briefing on demand.
+
+You can trigger playback with a Gemini routine to emulate the same "Play the news" experience (for example, a voice or scheduled routine that starts this playlist).
+
 This repo contains:
 
 - `sync_news.py`: Python script that fetches the newest episode from each show and replaces playlist tracks
-- `.github/worflows/sync.yml`: GitHub Actions workflow that runs the script on a schedule
+- `.github/workflows/sync.yml`: GitHub Actions workflow that runs the script on a schedule
+
+## Current Podcast Lineup
+
+The playlist currently pulls the latest episode from these Spotify shows:
+
+- TimesLIVE
+- DW News Brief
+- WSJ TechNews Briefing
+- Bloomberg News Now
+- EngadgetNews+Next
+- MRKT Matrix
+- TechLinked
+- CNN 5 Things
+
+These are defined in `sync_news.py` under `SHOW_IDS`.
+
+## Use Your Own Podcasts
+
+To replace or add your own sources:
+
+1. Open `sync_news.py`
+2. Find the `SHOW_IDS` list inside `main()`
+3. Replace existing Spotify show URLs with your own, or add new URLs as new lines in the list
+4. Keep each item as a full Spotify show URL, for example:
+
+```python
+"https://open.spotify.com/show/<your_show_id>?si=<optional_tracking>"
+```
+
+Tips:
+
+- The script automatically extracts the show ID from each URL, so tracking query parameters do not break it
+- Keep at least one valid show URL in `SHOW_IDS`, or the playlist update will be skipped
 
 ## How It Works
 
@@ -40,7 +79,7 @@ Path in GitHub UI:
 
 ## Workflow Schedule
 
-The workflow is configured in `.github/worflows/sync.yml` and runs:
+The workflow is configured in `.github/workflows/sync.yml` and runs:
 
 - Every hour at minute `0` (`cron: 0 * * * *`)
 - On manual trigger (`workflow_dispatch`)
