@@ -1,0 +1,30 @@
+name: Daily News Playlist Sync
+
+on:
+  schedule:
+    # Runs at minute 0 of every hour (e.g., 1:00, 2:00, etc.)
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+jobs:
+  refresh-playlist:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install Dependencies
+      run: pip install requests
+
+    - name: Run Sync Script
+      env:
+        SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
+        SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
+        SPOTIFY_REFRESH_TOKEN: ${{ secrets.SPOTIFY_REFRESH_TOKEN }}
+        SPOTIFY_PLAYLIST_ID: ${{ secrets.SPOTIFY_PLAYLIST_ID }}
+      run: python sync_news.py
