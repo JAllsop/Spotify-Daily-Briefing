@@ -2,6 +2,8 @@
 
 Automatically refresh a Spotify playlist with the latest episode from a curated list of news podcasts
 
+[Dashboard](https://jallsop.github.io/Spotify-Daily-Briefing/dashboard/)
+
 ## Why This Exists
 
 Google Assistant's old "Play the news" behavior is broken or unreliable for many users. This project serves as a modern replacement: it keeps a dedicated Spotify playlist updated with the latest news podcast episodes so you can get a fresh briefing on demand
