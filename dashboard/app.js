@@ -1,14 +1,12 @@
 const REPO_OWNER = "JAllsop"; 
 const REPO_NAME = "Spotify-Daily-Briefing";
 const CONFIG_PATH = "config.json";
-const SPOTIFY_CLIENT_ID = "ad5b5f8eb8924e0eab1b3d69349d0203";
 
 let currentFileSha = null;
 let currentShowIds = [];
 
 window.onload = function() {
     document.getElementById("ghToken").value = localStorage.getItem("gh_pat_token") || "";
-    document.getElementById("spotSecret").value = localStorage.getItem("spotify_client_secret") || "";
     bindPasswordToggleButtons();
     
     if (localStorage.getItem("gh_pat_token")) {
@@ -34,58 +32,55 @@ function bindPasswordToggleButtons() {
 
 function saveCredentials() {
     const ghToken = document.getElementById("ghToken").value.trim();
-    const spotSecret = document.getElementById("spotSecret").value.trim();
     
     localStorage.setItem("gh_pat_token", ghToken);
-    localStorage.setItem("spotify_client_secret", spotSecret);
     
     showStatus("Credentials locked into browser storage layer.", "text-emerald-400");
     loadConfigFromGitHub();
 }
 
-async function getSpotifyToken() {
-    const secret = localStorage.getItem("spotify_client_secret");
-    if (!secret) return null;
+function parseSpotifyShowId(showRef) {
+    if (!showRef) return null;
 
     try {
-        const url = "https://corsproxy.io/?https://accounts.spotify.com/api/token";
-        
-        const bodyPayload = `grant_type=client_credentials&client_id=${SPOTIFY_CLIENT_ID}&client_secret=${secret}`;
+        if (showRef.startsWith("spotify:show:")) {
+            return showRef.split(":").pop() || null;
+        }
 
-        const res = await fetch(url, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded"
-            },
-            body: bodyPayload
-        });
-
-        if (!res.ok) throw new Error(`Spotify Auth HTTP ${res.status}`);
-        
-        const data = await res.json();
-        return data.access_token;
-    } catch (e) {
-        console.error("Failed to fetch Spotify auth token", e);
-        return null;
+        const url = new URL(showRef);
+        const match = url.pathname.match(/\/show\/([A-Za-z0-9]+)/);
+        return match?.[1] || null;
+    } catch {
+        return /^[A-Za-z0-9]{22}$/.test(showRef) ? showRef : null;
     }
 }
 
-async function fetchShowMetadata(showUrl, token) {
-    const cleanId = showUrl.split('/').pop().split('?')[0];
-    const defaultData = { id: showUrl, title: cleanId, img: "https://placehold.co/60x60/1e293b/10b981?text=News" };
-    
-    if (!token) return defaultData;
+function toSpotifyShowUrl(showRef) {
+    const showId = parseSpotifyShowId(showRef);
+    if (showId) return `https://open.spotify.com/show/${showId}`;
+    return showRef;
+}
+
+async function fetchShowMetadata(showRef) {
+    const showId = parseSpotifyShowId(showRef);
+    const showUrl = toSpotifyShowUrl(showRef);
+    const defaultData = {
+        id: showRef,
+        title: showId || showRef,
+        img: "https://placehold.co/60x60/1e293b/10b981?text=News"
+    };
+
+    if (!showUrl) return defaultData;
 
     try {
-        const res = await fetch(`https://api.spotify.com/v1/shows/${cleanId}`, {
-            headers: { "Authorization": `Bearer ${token}` }
-        });
+        const res = await fetch(`https://open.spotify.com/oembed?url=${encodeURIComponent(showUrl)}`);
         if (!res.ok) return defaultData;
+
         const data = await res.json();
         return {
-            id: showUrl,
-            title: data.name,
-            img: data.images[0]?.url || defaultData.img
+            id: showRef,
+            title: data.title || defaultData.title,
+            img: data.thumbnail_url || defaultData.img
         };
     } catch {
         return defaultData;
@@ -131,8 +126,7 @@ async function renderRichCards() {
     const container = document.getElementById("richSourcesContainer");
     container.innerHTML = `<div class="text-xs text-slate-500 animate-pulse">Fetching rich artwork elements from Spotify...</div>`;
     
-    const spotToken = await getSpotifyToken();
-    const cardPromises = currentShowIds.map(url => fetchShowMetadata(url, spotToken));
+    const cardPromises = currentShowIds.map((url) => fetchShowMetadata(url));
     const results = await Promise.all(cardPromises);
     
     container.innerHTML = "";
