@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen p-6 font-sans">
-    <div class="max-w-4xl mx-auto space-y-6">
+    <div class="max-w-6xl mx-auto space-y-6">
         
         <header class="border-b border-slate-800 pb-4 flex justify-between items-center">
             <h1 class="text-2xl font-bold tracking-tight text-emerald-400">Spotify Briefing Control Panel</h1>
@@ -18,11 +18,17 @@
         <section class="bg-slate-800 p-4 rounded-xl border border-slate-700 grid grid-cols-1 md:grid-cols-2 gap-4 shadow-md">
             <div class="space-y-2">
                 <label class="text-xs font-semibold tracking-wider text-slate-400 uppercase block">GitHub Token</label>
-                <input type="password" id="ghToken" placeholder="GitHub Fine-Grained Token" class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-emerald-500 font-mono">
+                <div class="relative">
+                    <input type="password" id="ghToken" placeholder="GitHub Fine-Grained Token" class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-1.5 pr-16 text-sm focus:outline-none focus:border-emerald-500 font-mono">
+                    <button type="button" data-toggle-target="ghToken" class="password-toggle-btn absolute right-2 top-1/2 -translate-y-1/2 text-[11px] font-semibold text-slate-300 hover:text-emerald-400 cursor-pointer transition">Show</button>
+                </div>
             </div>
             <div class="space-y-2">
                 <label class="text-xs font-semibold tracking-wider text-slate-400 uppercase block">Spotify Client Secret (For Artwork Fetching)</label>
-                <input type="password" id="spotSecret" placeholder="dd0dda684e314ed0b053..." class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-emerald-500 font-mono">
+                <div class="relative">
+                    <input type="password" id="spotSecret" placeholder="dd0dda684e314ed0b053..." class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-1.5 pr-16 text-sm focus:outline-none focus:border-emerald-500 font-mono">
+                    <button type="button" data-toggle-target="spotSecret" class="password-toggle-btn absolute right-2 top-1/2 -translate-y-1/2 text-[11px] font-semibold text-slate-300 hover:text-emerald-400 cursor-pointer transition">Show</button>
+                </div>
             </div>
             <div class="md:col-span-2 flex justify-end">
                 <button onclick="saveCredentials()" class="bg-slate-700 hover:bg-slate-600 text-xs font-bold px-4 py-2 rounded cursor-pointer transition">Save Credentials to Local Storage</button>

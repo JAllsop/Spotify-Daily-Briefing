@@ -9,11 +9,28 @@ let currentShowIds = [];
 window.onload = function() {
     document.getElementById("ghToken").value = localStorage.getItem("gh_pat_token") || "";
     document.getElementById("spotSecret").value = localStorage.getItem("spotify_client_secret") || "";
+    bindPasswordToggleButtons();
     
     if (localStorage.getItem("gh_pat_token")) {
         loadConfigFromGitHub();
     }
 };
+
+function bindPasswordToggleButtons() {
+    const buttons = document.querySelectorAll(".password-toggle-btn");
+    buttons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const targetId = btn.getAttribute("data-toggle-target");
+            const input = document.getElementById(targetId);
+            if (!input) return;
+
+            const isHidden = input.type === "password";
+            input.type = isHidden ? "text" : "password";
+            btn.textContent = isHidden ? "Hide" : "Show";
+            btn.setAttribute("aria-pressed", String(isHidden));
+        });
+    });
+}
 
 function saveCredentials() {
     const ghToken = document.getElementById("ghToken").value.trim();
@@ -87,7 +104,16 @@ async function loadConfigFromGitHub() {
         const data = await res.json();
         currentFileSha = data.sha;
         
-        const config = JSON.parse(atob(data.content));
+        // Handle empty or blank files gracefully instead of crashing
+        let config = { playlist_id: "", show_ids: [] };
+        if (data.content && data.content.trim() !== "") {
+            try {
+                config = JSON.parse(atob(data.content));
+            } catch (parseErr) {
+                console.warn("File content was not valid JSON. Initializing with defaults.");
+            }
+        }
+        
         document.getElementById("playlistId").value = config.playlist_id || "";
         currentShowIds = config.show_ids || [];
         
