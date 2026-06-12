@@ -48,7 +48,6 @@ async function getSpotifyToken() {
     if (!secret) return null;
 
     try {
-        // Utilizing a public CORS proxy to trade tokens without server context backend overhead
         const url = `https://corsproxy.io/?${encodeURIComponent("https://accounts.spotify.com/api/token")}`;
         const res = await fetch(url, {
             method: "POST",
@@ -67,7 +66,7 @@ async function getSpotifyToken() {
 }
 
 async function fetchShowMetadata(showUrl, token) {
-    const cleanId = showUrl.split('/')[-1].split('?')[0];
+    const cleanId = showUrl.split('/').pop().split('?')[0];
     const defaultData = { id: showUrl, title: cleanId, img: "https://placehold.co/60x60/1e293b/10b981?text=News" };
     
     if (!token) return defaultData;
@@ -104,7 +103,6 @@ async function loadConfigFromGitHub() {
         const data = await res.json();
         currentFileSha = data.sha;
         
-        // Handle empty or blank files gracefully instead of crashing
         let config = { playlist_id: "", show_ids: [] };
         if (data.content && data.content.trim() !== "") {
             try {
