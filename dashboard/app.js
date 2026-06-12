@@ -48,16 +48,20 @@ async function getSpotifyToken() {
     if (!secret) return null;
 
     try {
-        // FIXED: Removed encodeURIComponent so corsproxy.io can natively parse the address string
         const url = "https://corsproxy.io/?https://accounts.spotify.com/api/token";
+        
+        const bodyPayload = `grant_type=client_credentials&client_id=${SPOTIFY_CLIENT_ID}&client_secret=${secret}`;
+
         const res = await fetch(url, {
             method: "POST",
             headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-                "Authorization": "Basic " + btoa(SPOTIFY_CLIENT_ID + ":" + secret)
+                "Content-Type": "application/x-www-form-urlencoded"
             },
-            body: "grant_type=client_credentials"
+            body: bodyPayload
         });
+
+        if (!res.ok) throw new Error(`Spotify Auth HTTP ${res.status}`);
+        
         const data = await res.json();
         return data.access_token;
     } catch (e) {
