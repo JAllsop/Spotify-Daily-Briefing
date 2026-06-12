@@ -64,26 +64,24 @@ function toSpotifyShowUrl(showRef) {
 async function fetchShowMetadata(showRef) {
     const showId = parseSpotifyShowId(showRef);
 
-    // Fallback data if the fetch completely fails
     const defaultData = {
         id: showRef,
         title: showId || "Unknown Show",
         img: "https://placehold.co/60x60/1e293b/10b981?text=Audio"
     };
 
-    if (!showId) return defaultData;
+    if (!showId) {
+        return defaultData;
+    }
 
     try {
-        const spotifyUrl = `https://open.spotify.com/show/$${showId}`;
-        const oembedUrl = `https://open.spotify.com/oembed?url=$${encodeURIComponent(spotifyUrl)}`;
-        
-        // Swapped to corsproxy.io
-        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(oembedUrl)}`;
+        const oembedUrl =
+            `https://open.spotify.com/oembed?url=https://open.spotify.com/show/${showId}`;
 
-        const res = await fetch(proxyUrl);
+        const res = await fetch(oembedUrl);
 
         if (!res.ok) {
-            console.warn(`Spotify API returned HTTP ${res.status} for show ${showId}`);
+            console.warn(`Spotify returned HTTP ${res.status}`);
             return defaultData;
         }
 
@@ -94,8 +92,13 @@ async function fetchShowMetadata(showRef) {
             title: data.title || defaultData.title,
             img: data.thumbnail_url || defaultData.img
         };
-    } catch (err) {
-        console.warn(`Network/CORS error fetching metadata for ${showRef}:`, err);
+    }
+    catch (err) {
+        console.warn(
+            `Failed to fetch Spotify metadata for ${showRef}:`,
+            err
+        );
+
         return defaultData;
     }
 }
@@ -138,39 +141,55 @@ async function loadConfigFromGitHub() {
 async function renderRichCards() {
     const container = document.getElementById("richSourcesContainer");
 
-    container.innerHTML = "";
+    if (currentShowIds.length === 0) {
+        container.innerHTML =
+            `<div class="text-xs text-slate-500">No shows in sequence. Add one above.</div>`;
+        return;
+    }
 
-    for (let i = 0; i < currentShowIds.length; i++) {
-        const url = currentShowIds[i];
-        const div = document.createElement("div");
-        div.id = `card-placeholder-${i}`;
-        div.className = "flex items-center justify-between bg-slate-900 border border-slate-700/60 p-3 rounded-lg shadow-inner opacity-60";
-        div.innerHTML = `<div class="text-xs text-slate-500 animate-pulse tracking-wide">Fetching metadata for item ${i + 1}...</div>`;
-        container.appendChild(div);
-        
-        const show = await fetchShowMetadata(url);
+    container.innerHTML = currentShowIds.map((_, i) => `
+        <div id="card-placeholder-${i}"
+             class="flex items-center justify-between bg-slate-900 border border-slate-700/60 p-3 rounded-lg shadow-inner opacity-60">
+            <div class="text-xs text-slate-500 animate-pulse tracking-wide">
+                Fetching metadata for item ${i + 1}...
+            </div>
+        </div>
+    `).join("");
 
-        div.className = "flex items-center justify-between bg-slate-900 border border-slate-700/60 p-3 rounded-lg animate-fade-in shadow-inner";
+    const shows = await Promise.all(
+        currentShowIds.map(showRef => fetchShowMetadata(showRef))
+    );
+
+    shows.forEach((show, i) => {
+        const div = document.getElementById(`card-placeholder-${i}`);
+
+        if (!div) return;
+
+        div.className =
+            "flex items-center justify-between bg-slate-900 border border-slate-700/60 p-3 rounded-lg animate-fade-in shadow-inner gap-2";
+
         div.innerHTML = `
-            <div class="flex items-center gap-3">
-                <img src="${show.img}" class="w-12 h-12 rounded object-cover shadow-md border border-slate-700">
-                <div>
-                    <h3 class="text-sm font-semibold text-slate-100">${show.title}</h3>
-                    <p class="text-[10px] text-slate-500 font-mono tracking-tighter truncate max-w-xs md:max-w-md">${show.id}</p>
+            <div class="flex items-center gap-3 min-w-0 flex-1">
+                <img src="${show.img}"
+                     class="w-12 h-12 rounded object-cover shadow-md border border-slate-700 flex-shrink-0">
+
+                <div class="min-w-0 flex-1">
+                    <h3 class="text-sm font-semibold text-slate-100 truncate">
+                        ${show.title}
+                    </h3>
+
+                    <p class="text-[10px] text-slate-500 font-mono tracking-tighter truncate">
+                        ${show.id}
+                    </p>
                 </div>
             </div>
-            <button onclick="removeSource(${i})" class="text-slate-500 hover:text-rose-400 p-2 cursor-pointer transition text-sm">✕</button>
+
+            <button onclick="removeSource(${i})"
+                    class="text-slate-500 hover:text-rose-400 p-2 flex-shrink-0 cursor-pointer transition text-sm">
+                ✕
+            </button>
         `;
-
-        // 4. Add a 500ms delay before the next request to appease the proxy's rate limits
-        if (i < currentShowIds.length - 1) {
-            await new Promise(resolve => setTimeout(resolve, 500));
-        }
-    }
-
-    if (currentShowIds.length === 0) {
-        container.innerHTML = `<div class="text-xs text-slate-500">No shows in sequence. Add one above.</div>`;
-    }
+    });
 }
 
 function addSourceFromInput() {
