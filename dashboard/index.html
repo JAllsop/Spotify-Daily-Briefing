@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News Briefing Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-6 font-sans">
+    <div class="max-w-4xl mx-auto space-y-6">
+        
+        <header class="border-b border-slate-800 pb-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold tracking-tight text-emerald-400">Spotify Briefing Control Panel</h1>
+            <span class="text-xs bg-slate-800 text-slate-400 px-2 py-1 rounded border border-slate-700">Modular JAMstack</span>
+        </header>
+
+        <section class="bg-slate-800 p-4 rounded-xl border border-slate-700 grid grid-cols-1 md:grid-cols-2 gap-4 shadow-md">
+            <div class="space-y-2">
+                <label class="text-xs font-semibold tracking-wider text-slate-400 uppercase block">GitHub Token</label>
+                <input type="password" id="ghToken" placeholder="GitHub Fine-Grained Token" class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-emerald-500 font-mono">
+            </div>
+            <div class="space-y-2">
+                <label class="text-xs font-semibold tracking-wider text-slate-400 uppercase block">Spotify Client Secret (For Artwork Fetching)</label>
+                <input type="password" id="spotSecret" placeholder="dd0dda684e314ed0b053..." class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-emerald-500 font-mono">
+            </div>
+            <div class="md:col-span-2 flex justify-end">
+                <button onclick="saveCredentials()" class="bg-slate-700 hover:bg-slate-600 text-xs font-bold px-4 py-2 rounded cursor-pointer transition">Save Credentials to Local Storage</button>
+            </div>
+        </section>
+
+        <main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-1 bg-slate-800 p-5 rounded-xl border border-slate-700 space-y-4 h-fit shadow-md">
+                <h2 class="text-sm font-bold text-slate-300 border-b border-slate-700 pb-2">Playlist Settings</h2>
+                
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-slate-400">Target Playlist ID</label>
+                    <input type="text" id="playlistId" class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-xs font-mono focus:border-emerald-500 focus:outline-none">
+                </div>
+
+                <div class="space-y-2 pt-2">
+                    <label class="text-xs font-semibold text-slate-400 block">Quick Append Source Link</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="newSourceUrl" placeholder="Paste Spotify show link..." class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-emerald-500">
+                        <button onclick="addSourceFromInput()" class="bg-emerald-600 hover:bg-emerald-500 text-xs font-bold px-3 py-1.5 rounded cursor-pointer transition">Add</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2 bg-slate-800 p-6 rounded-xl border border-slate-700 space-y-4 shadow-md">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-base font-bold text-slate-200">Podcast Playback Sequence</h2>
+                    <button onclick="loadConfigFromGitHub()" class="bg-slate-700 hover:bg-slate-600 text-xs font-semibold px-3 py-1.5 rounded cursor-pointer transition">Pull Config</button>
+                </div>
+
+                <div id="richSourcesContainer" class="space-y-2 min-h-32">
+                    </div>
+
+                <div class="border-t border-slate-700 pt-4 flex justify-between items-center">
+                    <div id="statusMessage" class="text-xs font-medium text-slate-400"></div>
+                    <button onclick="saveConfigToGitHub()" class="bg-emerald-600 hover:bg-emerald-500 text-sm font-bold px-5 py-2 rounded shadow-md cursor-pointer transition">Commit Changes</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

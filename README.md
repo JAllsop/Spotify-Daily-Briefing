@@ -4,111 +4,94 @@ Automatically refresh a Spotify playlist with the latest episode from a curated 
 
 ## Why This Exists
 
-Google Assistant's old "Play the news" behavior is broken/unreliable for many users. This project is intended as a replacement: it keeps a Spotify playlist updated with the latest news podcast episodes so you can get a fresh briefing on demand.
+Google Assistant's old "Play the news" behavior is broken or unreliable for many users. This project serves as a modern replacement: it keeps a dedicated Spotify playlist updated with the latest news podcast episodes so you can get a fresh briefing on demand
 
-You can trigger playback with a Gemini routine to emulate the same "Play the news" experience (for example, a voice or scheduled routine that starts this playlist).
+You can trigger playback with a Gemini or Google Assistant routine to emulate the same "Play the news" experience (for example, a voice or scheduled routine that starts this specific playlist)
 
 This repo contains:
+- `config.json`: Centralized configuration file holding your playlist ID and podcast sources
+- `sync_news.py`: Python script that reads the configuration, fetches the newest episode from each show, and replaces playlist items
+- `.github/workflows/sync.yml`: GitHub Actions workflow that executes the script on an automated schedule
 
-- `sync_news.py`: Python script that fetches the newest episode from each show and replaces playlist tracks
-- `.github/workflows/sync.yml`: GitHub Actions workflow that runs the script on a schedule
+## Managing Your Podcast Lineup
 
-## Current Podcast Lineup
+Your podcast lineup is entirely decoupled from the codebase and managed dynamically inside **`config.json`**. To update playlist targets, rearrange the playback sequence, or change your news lineup entirely, you can edit your configuration directly on GitHub.com without touching the Python script:
 
-The playlist currently pulls the latest episode from these Spotify shows:
+1. Open **`config.json`*- in your browser
+2. Click the **Pencil Icon*- (Edit this file)
+3. Modify the `playlist_id` or add/remove entries in the `show_ids` array. You can paste raw Spotify show share links directly, ordered from top to bottom in your preferred playback sequence:
 
-- TimesLIVE
-- DW News Brief
-- WSJ TechNews Briefing
-- Bloomberg News Now
-- EngadgetNews+Next
-- MRKT Matrix
-- TechLinked
-- CNN 5 Things
-
-These are defined in `sync_news.py` under `SHOW_IDS`.
-
-## Use Your Own Podcasts
-
-To replace or add your own sources:
-
-1. Open `sync_news.py`
-2. Find the `SHOW_IDS` list inside `main()`
-3. Replace existing Spotify show URLs with your own, or add new URLs as new lines in the list
-4. Keep each item as a full Spotify show URL, for example:
-
-```python
-"https://open.spotify.com/show/<your_show_id>?si=<optional_tracking>"
+```json
+{
+  "playlist_id": "YOUR_PLAYLIST_ID",
+  "show_ids": [
+    "[https://open.spotify.com/show/](https://open.spotify.com/show/)<your_show_id_1>",
+    "[https://open.spotify.com/show/](https://open.spotify.com/show/)<your_show_id_2>",
+    "[https://open.spotify.com/show/](https://open.spotify.com/show/)<your_show_id_3>"
+  ]
+}
 ```
 
-Tips:
+4. Commit the changes. The automated hourly worker will pick up your modifications on its very next run
 
-- The script automatically extracts the show ID from each URL, so tracking query parameters do not break it
-- Keep at least one valid show URL in `SHOW_IDS`, or the playlist update will be skipped
+> **Tip:*- The script automatically extracts the unique 22-character show ID from each URL, so tracking query parameters (like `?si=...`) will not break the execution
 
 ## How It Works
 
-1. The script exchanges your Spotify refresh token for an access token
-2. It loops through configured show links and extracts each show ID
-3. It fetches the most recent episode (`limit=1`) for each show
-4. It sends a `PUT` request to replace all playlist tracks with the collected episode URIs
-
-If no episodes are retrieved, the script exits without modifying the playlist
+1. The GitHub Actions runner triggers the Python script
+2. The script exchanges your long-lived Spotify **Refresh Token*- for a temporary **Access Token**
+3. The script reads `config.json` to extract your target playlist ID and source links
+4. It loops through the links, requests the single most recent track (`limit=1`) from Spotify's catalog for each show, and collects their URIs
+5. It sends an atomic `PUT` request to the Spotify `/items` endpoint, completely wiping yesterday's tracks and setting up the new lineup in one clean operation
 
 ## Requirements
 
-- A Spotify app with:
-	- `SPOTIFY_CLIENT_ID`
-	- `SPOTIFY_CLIENT_SECRET`
-- A valid `SPOTIFY_REFRESH_TOKEN`
-- A target `SPOTIFY_PLAYLIST_ID`
-- Python 3.11+ (3.11 is used in GitHub Actions)
+- A Spotify Developer App with a validated User Whitelist
+- Python 3.11+ (handled natively within the GitHub Actions runner environment)
+- Three core environment keys configured inside your repository secrets
 
 ## GitHub Secrets
 
-Add these repository secrets in GitHub:
+To keep your credentials secure, add these three repository secrets in GitHub:
 
 - `SPOTIFY_CLIENT_ID`
 - `SPOTIFY_CLIENT_SECRET`
 - `SPOTIFY_REFRESH_TOKEN`
-- `SPOTIFY_PLAYLIST_ID`
 
-Path in GitHub UI:
+**Path in GitHub UI:*- `Settings` -> `Secrets and variables` -> `Actions` -> `New repository secret`
 
-`Settings -> Secrets and variables -> Actions -> New repository secret`
+*(Note: Your `SPOTIFY_PLAYLIST_ID` is handled safely inside `config.json`, meaning you only need to manage these 3 core authentication keys as secrets)*
 
 ## Workflow Schedule
 
-The workflow is configured in `.github/workflows/sync.yml` and runs:
+The workflow is configured in `.github/workflows/sync.yml` and triggers automatically:
 
-- Every hour at minute `0` (`cron: 0 * * * *`)
-- On manual trigger (`workflow_dispatch`)
+- **Every hour at minute 0*- (`cron: '0 - - - *'`) to ensure your floating schedule always has current feeds
+- **On manual trigger*- (`workflow_dispatch`) via the "Run workflow" button in your GitHub Actions tab for instant testing
 
 ## Run Locally
 
-1. Export required environment variables:
+If you want to test the execution locally inside your workspace terminal:
 
+1. Export your credentials into your active session:
 ```bash
 export SPOTIFY_CLIENT_ID="your_client_id"
 export SPOTIFY_CLIENT_SECRET="your_client_secret"
 export SPOTIFY_REFRESH_TOKEN="your_refresh_token"
-export SPOTIFY_PLAYLIST_ID="your_playlist_id"
 ```
 
-2. Install dependency:
-
+2. Install dependencies:
 ```bash
 pip install requests
 ```
 
-3. Run the sync:
-
+3. Execute the worker sync:
 ```bash
 python sync_news.py
 ```
 
 ## Notes
 
-- Playlist updates are atomic via `PUT /v1/playlists/{playlist_id}/tracks`
-- Existing playlist items are replaced each run
-- The show list is currently hardcoded in `sync_news.py` under `SHOW_IDS`
+- Playlist updates are atomic via `PUT /v1/playlists/{playlist_id}/items`
+- Legacy applications using the deprecated `/tracks` endpoint will receive a `403 Forbidden` error; this codebase is explicitly locked to the updated `/items` standard
+- If no active episodes are retrieved during a run, the script terminates safely without clearing or altering your current playlist layout
