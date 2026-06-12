@@ -108,7 +108,7 @@ async function loadConfigFromGitHub() {
             try {
                 config = JSON.parse(atob(data.content));
             } catch (parseErr) {
-                console.warn("File content was not valid JSON. Initializing with defaults.");
+                console.warn("File content was not valid JSON - initializing with defaults");
             }
         }
         
@@ -116,7 +116,7 @@ async function loadConfigFromGitHub() {
         currentShowIds = config.show_ids || [];
         
         await renderRichCards();
-        showStatus("Configuration loaded.", "text-emerald-400");
+        showStatus("Configuration loaded", "text-emerald-400");
     } catch (err) {
         showStatus(`Failed loading configuration: ${err.message}`, "text-rose-400");
     }
@@ -167,7 +167,7 @@ async function saveConfigToGitHub() {
     const token = localStorage.getItem("gh_pat_token");
     const playlistId = document.getElementById("playlistId").value.trim();
     
-    if (!token || !currentFileSha) return alert("Fetch tracking configuration profile before committing updates.");
+    if (!token || !currentFileSha) return alert("Fetch tracking configuration profile before committing updates");
     if (!playlistId) return alert("Target playlist ID required.");
 
     const updatedConfig = { playlist_id: playlistId, show_ids: currentShowIds };
