@@ -48,7 +48,8 @@ async function getSpotifyToken() {
     if (!secret) return null;
 
     try {
-        const url = `https://corsproxy.io/?${encodeURIComponent("https://accounts.spotify.com/api/token")}`;
+        // FIXED: Removed encodeURIComponent so corsproxy.io can natively parse the address string
+        const url = "https://corsproxy.io/?https://accounts.spotify.com/api/token";
         const res = await fetch(url, {
             method: "POST",
             headers: {
