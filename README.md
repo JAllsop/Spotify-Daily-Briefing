@@ -1,8 +1,12 @@
 # Spotify Daily Briefing
 
-![Spotify Daily Briefing](dashboard/logo.png)
+<p align="center">
+  <img src="dashboard/logo.png" alt="Spotify Daily Briefing" width="200">
+</p>
 
-[Dashboard](https://jallsop.github.io/Spotify-Daily-Briefing/dashboard/)
+<p align="center">
+  <a href="https://jallsop.github.io/Spotify-Daily-Briefing/dashboard/">Dashboard</a>
+</p>
 
 Automatically refresh a Spotify playlist with the latest episode from a curated list of news podcasts
 
@@ -38,7 +42,7 @@ Your podcast lineup is entirely decoupled from the codebase and managed dynamica
 
 4. Commit the changes. The automated hourly worker will pick up your modifications on its very next run
 
-> **Tip:*- The script automatically extracts the unique 22-character show ID from each URL, so tracking query parameters (like `?si=...`) will not break the execution
+> **Tip:** The script automatically extracts the unique 22-character show ID from each URL, so tracking query parameters (like `?si=...`) will not break the execution
 
 ## How It Works
 
