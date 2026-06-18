@@ -4,6 +4,8 @@ const CONFIG_PATH = "config.json";
 
 let currentFileSha = null;
 let currentShowIds = [];
+let cachedShows = [];
+let dragSrcIndex = null;
 
 window.onload = function () {
     document.getElementById("ghToken").value = localStorage.getItem("gh_pat_token") || "";
@@ -35,7 +37,7 @@ function saveCredentials() {
 
     localStorage.setItem("gh_pat_token", ghToken);
 
-    showStatus("Credentials locked into browser storage layer.", "text-emerald-400");
+    showStatus("Credentials locked into browser storage layer", "text-emerald-400");
     loadConfigFromGitHub();
 }
 
@@ -105,7 +107,7 @@ async function fetchShowMetadata(showRef) {
 
 async function loadConfigFromGitHub() {
     const token = localStorage.getItem("gh_pat_token");
-    if (!token) return showStatus("GitHub token required to fetch setup profile data.", "text-amber-400");
+    if (!token) return showStatus("GitHub token required to fetch setup profile data", "text-amber-400");
 
     showStatus("Parsing config file state via API...", "text-slate-400");
     const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${CONFIG_PATH}`;
@@ -160,15 +162,26 @@ async function renderRichCards() {
         currentShowIds.map(showRef => fetchShowMetadata(showRef))
     );
 
-    shows.forEach((show, i) => {
-        const div = document.getElementById(`card-placeholder-${i}`);
+    cachedShows = shows;
+    renderFromCache();
+}
 
-        if (!div) return;
+function renderFromCache() {
+    const container = document.getElementById("richSourcesContainer");
 
-        div.className =
-            "flex items-center justify-between bg-slate-900 border border-slate-700/60 p-3 rounded-lg animate-fade-in shadow-inner gap-2";
+    if (cachedShows.length === 0) {
+        container.innerHTML =
+            `<div class="text-xs text-slate-500">No shows in sequence. Add one above.</div>`;
+        return;
+    }
 
-        div.innerHTML = `
+    container.innerHTML = cachedShows.map((show, i) => `
+        <div id="card-${i}" draggable="true" data-index="${i}"
+             class="flex items-center justify-between bg-slate-900 border border-slate-700/60 p-3 rounded-lg animate-fade-in shadow-inner gap-2">
+
+            <div class="drag-handle flex-shrink-0 text-slate-600 hover:text-slate-400 cursor-grab px-1 select-none"
+                 title="Drag to reorder">⠿</div>
+
             <div class="flex items-center gap-3 min-w-0 flex-1">
                 <img src="${show.img}"
                      class="w-12 h-12 rounded object-cover shadow-md border border-slate-700 flex-shrink-0">
@@ -188,7 +201,50 @@ async function renderRichCards() {
                     class="text-slate-500 hover:text-rose-400 p-2 flex-shrink-0 cursor-pointer transition text-sm">
                 ✕
             </button>
-        `;
+        </div>
+    `).join("");
+
+    attachDragHandlers();
+}
+
+function attachDragHandlers() {
+    const container = document.getElementById("richSourcesContainer");
+
+    container.querySelectorAll("[data-index]").forEach(card => {
+        card.addEventListener("dragstart", e => {
+            dragSrcIndex = parseInt(card.dataset.index);
+            e.dataTransfer.effectAllowed = "move";
+            setTimeout(() => card.classList.add("dragging"), 0);
+        });
+
+        card.addEventListener("dragend", () => {
+            card.classList.remove("dragging");
+            container.querySelectorAll("[data-index]").forEach(c => c.classList.remove("drag-over"));
+        });
+
+        card.addEventListener("dragover", e => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "move";
+            container.querySelectorAll("[data-index]").forEach(c => c.classList.remove("drag-over"));
+            if (parseInt(card.dataset.index) !== dragSrcIndex) {
+                card.classList.add("drag-over");
+            }
+        });
+
+        card.addEventListener("drop", e => {
+            e.preventDefault();
+            const dropIndex = parseInt(card.dataset.index);
+            if (dragSrcIndex === null || dragSrcIndex === dropIndex) return;
+
+            const [movedId] = currentShowIds.splice(dragSrcIndex, 1);
+            currentShowIds.splice(dropIndex, 0, movedId);
+
+            const [movedShow] = cachedShows.splice(dragSrcIndex, 1);
+            cachedShows.splice(dropIndex, 0, movedShow);
+
+            dragSrcIndex = null;
+            renderFromCache();
+        });
     });
 }
 
@@ -199,12 +255,14 @@ function addSourceFromInput() {
 
     currentShowIds.push(value);
     input.value = "";
+    cachedShows = [];
     renderRichCards();
 }
 
 function removeSource(index) {
     currentShowIds.splice(index, 1);
-    renderRichCards();
+    cachedShows.splice(index, 1);
+    renderFromCache();
 }
 
 async function saveConfigToGitHub() {
@@ -212,7 +270,7 @@ async function saveConfigToGitHub() {
     const playlistId = document.getElementById("playlistId").value.trim();
 
     if (!token || !currentFileSha) return alert("Fetch tracking configuration profile before committing updates");
-    if (!playlistId) return alert("Target playlist ID required.");
+    if (!playlistId) return alert("Target playlist ID required");
 
     const updatedConfig = { playlist_id: playlistId, show_ids: currentShowIds };
     const jsonString = JSON.stringify(updatedConfig, null, 2);
@@ -238,7 +296,7 @@ async function saveConfigToGitHub() {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         currentFileSha = data.content.sha;
-        showStatus("Success! Configuration verified and committed.", "text-emerald-400");
+        showStatus("Success! Configuration verified and committed", "text-emerald-400");
     } catch (err) {
         showStatus(`Commit rejected: ${err.message}`, "text-rose-400");
     }
