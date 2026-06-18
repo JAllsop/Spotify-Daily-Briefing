@@ -15,7 +15,7 @@
   - [Step 5: Configure your Playlist and Lineup](#step-5-configure-your-playlist-and-lineup)
   - [Step 6: Enable GitHub Actions](#step-6-enable-github-actions)
   - [Step 7: Access Your Live Dashboard](#step-7-access-your-live-dashboard)
-- [Managing Your Podcast Lineup](#managing-your-podcast-lineup)
+  - [Step 8: Authenticate Your Dashboard](#step-8-authenticate-your-dashboard)
 - [How It Works](#how-it-works)
 - [Workflow Schedule](#workflow-schedule)
 - [Run Locally](#run-locally)
@@ -108,24 +108,23 @@ The visual status dashboard can be hosted completely free on GitHub Pages:
    https://<YOUR_GITHUB_USERNAME>.github.io/<YOUR_REPOSITORY_NAME>/dashboard/
    ```
 
-## Managing Your Podcast Lineup
+### Step 8: Authenticate Your Dashboard
 
-Your podcast lineup is entirely managed dynamically inside **`config.json`**
+The live dashboard runs completely inside your browser and can talk directly to your GitHub repository to update your podcast order visually
 
-To update playlist targets, rearrange the playback sequence, or change your news lineup entirely, you can edit your configuration directly on GitHub.com without touching the Python script:
+To grant it access:
 
-```json
-{
-  "playlist_id": "YOUR_PLAYLIST_ID",
-  "show_ids": [
-    "[https://open.spotify.com/show/4rOoJ6Egrf8K2I68g97g66](https://open.spotify.com/show/4rOoJ6Egrf8K2I68g97g66)",
-    "[https://open.spotify.com/show/36N97g664rOoJ6Egrf8K2I](https://open.spotify.com/show/36N97g664rOoJ6Egrf8K2I)",
-    "[https://open.spotify.com/show/2I68g97g664rOoJ6Egrf8K](https://open.spotify.com/show/2I68g97g664rOoJ6Egrf8K)"
-  ]
-}
-```
+1. Click your profile picture at the top right of GitHub.com -> **Settings** -> **Developer settings** (at the very bottom of the left sidebar)
+2. Navigate to **Personal access tokens** -> **Fine-grained tokens** and click **Generate new token**
+3. Name your token (e.g. `Spotify Dashboard Config`), and set your preferred expiration
+4. Under **Repository access**, choose **Only select repositories** and pick your forked `Spotify-Daily-Briefing` repository
+5. Under **Permissions**, click the **Repository permissions** dropdown, find **Contents**, and change its access level to **Read and write**
+6. Scroll down, click **Generate token**, and copy the token string immediately
+7. Open your personal dashboard URL (from Step 7), paste your token into the **GitHub Token** field at the top, and click **Save Token To Local Storage**
 
-> **Tip:** The script automatically extracts the unique 22-character show ID from each URL, so tracking query parameters (like `?si=...`) will not break the execution. Items will be added to your playlist in the exact top-to-bottom order listed here
+Once saved, the dashboard will automatically pull your current lineup
+
+You can drag to reorder, add raw links, or delete shows, then hit **Commit Changes** to save directly back to your GitHub repository
 
 ## How It Works
 
