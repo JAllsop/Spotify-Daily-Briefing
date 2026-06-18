@@ -2,9 +2,9 @@
 
 ![Spotify Daily Briefing](dashboard/logo.png)
 
-Automatically refresh a Spotify playlist with the latest episode from a curated list of news podcasts
-
 [Dashboard](https://jallsop.github.io/Spotify-Daily-Briefing/dashboard/)
+
+Automatically refresh a Spotify playlist with the latest episode from a curated list of news podcasts
 
 ## Why This Exists
 
