@@ -126,6 +126,8 @@ Once saved, the dashboard will automatically pull your current lineup
 
 You can drag to reorder, add raw links, or delete shows, then hit **Commit Changes** to save directly back to your GitHub repository
 
+> **Important Note on Adblockers:** If your podcast preview cards fail to load, display as "Unknown Show," or get stuck on "Fetching metadata," you will need to disable your adblocker (such as uBlock Origin, Privacy Badger, or Brave Shields) for your dashboard page. Adblockers frequently block the Spotify `oembed` API endpoints used by the dashboard to fetch show titles and artwork
+
 ## How It Works
 
 1. The GitHub Actions runner triggers the Python script
