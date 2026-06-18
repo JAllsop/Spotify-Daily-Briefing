@@ -58,7 +58,7 @@ Because this script runs automatically without human intervention, it needs a lo
 1. Paste this URL into your browser, replacing `YOUR_CLIENT_ID` with the Client ID from Step 2:
 
    ```text
-   [https://accounts.spotify.com/authorize?client_id=YOUR_CLIENT_ID&response_type=code&redirect_uri=http://localhost:8080&scope=playlist-modify-public%20playlist-modify-private](https://accounts.spotify.com/authorize?client_id=YOUR_CLIENT_ID&response_type=code&redirect_uri=http://localhost:8080&scope=playlist-modify-public%20playlist-modify-private)
+   https://accounts.spotify.com/authorize?client_id=YOUR_CLIENT_ID&response_type=code&redirect_uri=http://localhost:8080&scope=playlist-modify-public%20playlist-modify-private
    ```
 
 2. Log in and click **Agree** to authorize your app
@@ -67,7 +67,7 @@ Because this script runs automatically without human intervention, it needs a lo
 5. Open your terminal and exchange that code for your tokens by running this command **(replace placeholders)**:
 
    ```bash
-   curl -H "Authorization: Basic $(echo -n 'YOUR_CLIENT_ID:YOUR_CLIENT_SECRET' | base64)" -d grant_type=authorization_code -d code=YOUR_CODE_FROM_URL -d redirect_uri=http://localhost:8080 [https://accounts.spotify.com/api/token](https://accounts.spotify.com/api/token)
+   curl -H "Authorization: Basic $(echo -n 'YOUR_CLIENT_ID:YOUR_CLIENT_SECRET' | base64)" -d grant_type=authorization_code -d code=YOUR_CODE_FROM_URL -d redirect_uri=http://localhost:8080 https://accounts.spotify.com/api/token
    ```
 
 6. Look closely at the JSON response and copy the **`refresh_token`** string
