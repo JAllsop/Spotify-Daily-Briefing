@@ -2,8 +2,8 @@ name: Daily News Playlist Sync
 
 on:
   schedule:
-    # Runs at minute 0 of every hour (e.g., 1:00, 2:00, etc.)
-    - cron: '0 * * * *'
+    # Runs every 3 hours at minute 0 (e.g., 00:00, 03:00, 06:00, etc.)
+    - cron: '0 */3 * * *'
   workflow_dispatch:
 
 jobs:
@@ -11,10 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: '3.11'
 
